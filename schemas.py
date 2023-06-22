@@ -3,6 +3,7 @@ from fastapi import Form,UploadFile,File
 from typing import Optional
 class UserBase(BaseModel):
     username: str
+    full_name: Optional[str]=None
 
 
 class UserCreate(UserBase):
@@ -49,3 +50,17 @@ class User(BaseModel):
     id: int
     username: str
     role: str
+
+
+class GetCategoryWithId(BaseModel): 
+    category :str
+    purchaser:str
+    product:str
+    seller:str
+    delivery_time:str
+    price: float
+    payer :str
+    urgent:Optional[bool]=False
+    description: str
+    payment_type:str
+    image:Optional[int]=None
