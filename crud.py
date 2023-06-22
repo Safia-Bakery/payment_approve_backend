@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 import models
 import schemas
+from sqlalchemy import or_
 import bcrypt
 
 def hash_password(password):
@@ -10,7 +11,7 @@ def hash_password(password):
 
 def create_user(db: Session, user: schemas.UserCreate):
     hashed_password = hash_password(user.password)
-    db_user = models.User(username=user.username, hashed_password=hashed_password)
+    db_user = models.User(username=user.username, hashed_password=hashed_password,full_name=user.full_name)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -85,6 +86,13 @@ def get_order_list(db:Session,role):
         return db.query(models.Order).all()
     else: 
         return None
+    
+
+def get_done_order_list(db:Session,role):
+    if role in ['musa','shakhzod','begzod','fin','accountant','purchasing']:
+        return db.query(models.Order).filter(or_(models.Order.status=='paid',models.Order.status=='denied')).all()
+    else: 
+        return None
 
 
 def get_user_with_idcr(db:Session,user_id):
@@ -101,6 +109,8 @@ def order_accept_db(db:Session,order_id,role,status):
         elif status =='accepted' and db_order_accept.status=='musa' and db_order_accept.category.name =='Розница':
             db_order_accept.status = 'begzod'
         elif status =='accepted' and db_order_accept.status=='begzod':
+            db_order_accept.status = 'fin'
+        elif status =='accepted' and db_order_accept.status=='shakhzod':
             db_order_accept.status = 'fin'
         elif status =='accepted' and db_order_accept.status=='fin':
             db_order_accept.status = 'accountant'

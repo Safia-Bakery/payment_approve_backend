@@ -12,9 +12,10 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     hashed_password = Column(String)
-    role = Column(String,default='unconfirmed',unique=True)
+    role = Column(String,default='unconfirmed')
     time_created = Column(DateTime,default=datetime.now(timezonetash))
     userhistory = relationship('UserHistory',back_populates='user')
+    full_name = Column(String,nullable=True)
     
 
 

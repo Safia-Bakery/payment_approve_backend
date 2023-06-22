@@ -8,7 +8,7 @@ tashkentimezone = pytz.timezone('Asia/Tashkent')
 def create_access_token(data: dict):
     SECRET_KEY = "thisistokenforusersecretauth"  # Replace with your own secret key
     ALGORITHM = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES = 10000 
 
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)

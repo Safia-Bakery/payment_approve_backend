@@ -158,11 +158,12 @@ async def get_user_list(db:Session=Depends(get_db),request_user: schemas.User = 
 @app.get('/get/order/list')
 async def get_order_list(db:Session=Depends(get_db),request_user: schemas.User = Depends(get_current_user)):
 
-    data = crud.get_order_list(db=db,role = request_user.role)
-    if not data:
+    order = crud.get_order_list(db=db,role = request_user.role)
+    if not order:
         return {'message':'you cannot get this data because you arenot confirmed', 'success':False}
-    #print(schemas.Create_Order(data))
-    return data
+    #print(schemas.Create_Order(data))\
+    order = [{'id':i.id,'status':i.status,'category':i.category.name , 'purchaser':i.purchaser, 'product':i.product,'seller':i.seller,'delivery_time':i.delivery_time,'price':i.price,'payer':i.payer,'urgent':i.urgent,'description':i.description,'payment_type':i.payment_type,'image_url':i.image_url} for i in order ]
+    return order
 
 
 
@@ -184,9 +185,21 @@ async def get_user_with_id(id_user:int,db:Session=Depends(get_db),request_user: 
 @app.get('/get/order/with/id/{id_order}')
 async def get_order_with_id(id_order:int,db:Session=Depends(get_db),request_user: schemas.User = Depends(get_current_user)):
     order = crud.get_order_with_id(db=db,order_id=id_order)
-    
     if not order:
         return {"message":'order with this id doesnot exist','success':False}
+    order = schemas.GetCategoryWithId(
+        category=order.category.name,
+        purchaser=order.purchaser,
+        product=order.product,
+        seller=order.seller,
+        delivery_time=order.delivery_time,
+        price=order.price,
+        payer=order.payer,
+        urgent=order.urgent,
+        description=order.description,
+        payment_type=order.payment_type,
+        image_url = order.image_url,
+    )
     return order
 
 
@@ -198,6 +211,20 @@ async def order_accept_reject(order_id:int,status:str,db:Session=Depends(get_db)
     if not order_accept:
         return {'message':'you cannot vote for this order. reason you may not be owner or accaptable status are accepted,denied','success':True}
     return order_accept
+
+
+
+
+
+@app.get('/get/done/order/list')
+async def get_order_done_list(db:Session=Depends(get_db),request_user: schemas.User = Depends(get_current_user)):
+
+    order = crud.get_done_order_list(db=db,role = request_user.role)
+    if not order:
+        return {'message':'you cannot get this data because you arenot confirmed', 'success':False}
+    order = [{'id':i.id,'status':i.status,'category':i.category.name , 'purchaser':i.purchaser, 'product':i.product,'seller':i.seller,'delivery_time':i.delivery_time,'price':i.price,'payer':i.payer,'urgent':i.urgent,'description':i.description,'payment_type':i.payment_type,'image_url':i.image_url} for i in order ]
+
+    return order
 ##############################authorization new
 
 
