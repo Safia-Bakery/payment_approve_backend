@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
 import models
 import schemas
 from sqlalchemy import or_
@@ -9,9 +8,9 @@ def hash_password(password):
     hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
     return hashed_password.decode("utf-8")
 
-def create_user(db: Session, user: schemas.UserCreate):
+def create_user(db: Session, user: schemas.UserCreate,username):
     hashed_password = hash_password(user.password)
-    db_user = models.User(username=user.username, hashed_password=hashed_password,full_name=user.full_name)
+    db_user = models.User(username=username, hashed_password=hashed_password,full_name=user.full_name,telegram_id = int(user.telegram_id))
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -82,14 +81,14 @@ def get_user_list(db:Session):
 def get_order_list(db:Session,role):
     if role in ['musa','shakhzod','begzod','fin','accountant']:
         return db.query(models.Order).filter(models.Order.status==role).all()
-    elif role =='purchasing':
+    elif role in ['purchasing','superadmin']:
         return db.query(models.Order).all()
     else: 
         return None
     
 
 def get_done_order_list(db:Session,role):
-    if role in ['musa','shakhzod','begzod','fin','accountant','purchasing']:
+    if role in ['musa','shakhzod','begzod','fin','accountant','purchasing','superadmin']:
         return db.query(models.Order).filter(or_(models.Order.status=='paid',models.Order.status=='denied')).all()
     else: 
         return None
@@ -125,6 +124,20 @@ def order_accept_db(db:Session,order_id,role,status):
     db.commit()
     db.refresh(db_order_accept)
     return db_order_accept
+
+
+def get_user_with_telid(db:Session,tel):
+    db_telegram = db.query(models.User).filter(models.User.telegram_id==tel.telid).first()
+    return db_telegram
     
+
+
+def get_one_user_with_role(db:Session,role):
+    user_with_role = db.query(models.User).filter(models.User.role==role).first()
+    return user_with_role
+
+
+
+
 
 

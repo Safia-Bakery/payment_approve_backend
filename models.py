@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String,ForeignKey,Float,DateTime,Boolean
+from sqlalchemy import Column, Integer, String,ForeignKey,Float,DateTime,Boolean,BIGINT
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 Base = declarative_base()
@@ -14,8 +14,8 @@ class User(Base):
     hashed_password = Column(String)
     role = Column(String,default='unconfirmed')
     time_created = Column(DateTime,default=datetime.now(timezonetash))
-    userhistory = relationship('UserHistory',back_populates='user')
     full_name = Column(String,nullable=True)
+    telegram_id = Column(BIGINT,unique=True)
     
 
 
@@ -42,7 +42,6 @@ class Order(Base):
     price = Column(Float)
     payer = Column(String)
     status = Column(String,default='musa')
-    userhistory = relationship('UserHistory',back_populates='order')
     time_created = Column(DateTime,default=datetime.now(timezonetash))
     urgent = Column(Boolean,default=False)
     image_url = relationship('ImageUpload',back_populates='order_image')
@@ -54,14 +53,7 @@ class Order(Base):
 
 
 
-class UserHistory(Base):
-    __tablename__='userhistory'
-    id = Column(Integer,primary_key=True,index=True)
-    order_id = Column(Integer,ForeignKey('order.id'))
-    order = relationship('Order',back_populates='userhistory')
-    user_id = Column(Integer,ForeignKey('users.id'))
-    user = relationship('User',back_populates='userhistory')
-    time_created = Column(DateTime,default=datetime.now(timezonetash))
+
 
 
 class ImageUpload(Base):
