@@ -18,7 +18,7 @@ from typing import Optional,Annotated
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer,OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
-CHANNEL_id = '-1001875200615'
+CHANNEL_id = '-1001965707394'
 models.Base.metadata.create_all(bind=engine)
 import bcrypt
 app = FastAPI()
@@ -28,7 +28,7 @@ ALGORITHM = "HS256"
 JWT_SECRET_KEY = 'thisistokenforusersecretauth'   # should be kept secret
 JWT_REFRESH_SECRET_KEY =  'thisistokenforusersecretrefresh'
 
-BOT_TOKEN = '6185022051:AAFGD0-Np6gO0oWpKxtW9v4ji_-kuGGlnbE'
+BOT_TOKEN = '6298581686:AAGVha0x_j3u-KPik0NDW6eSd_LBZ-0yQRI'
 
 origins = ["*"]
 
@@ -318,7 +318,7 @@ async def get_order_done_list(db:Session=Depends(get_db),request_user: schemas.U
 @app.post('/login/2', summary="Create access and refresh tokens for user")
 async def login(form_data: OAuth2PasswordRequestForm = Depends(),db:Session=Depends(get_db)):
     user = crud.get_user(db,form_data.username)
-    if user is None:
+    if user is None or user.role not in ['musa','shakhzod','begzod','fin','accountant','purchasing','superadmin']:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect email or password"
