@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from fastapi import Form,UploadFile,File
 from typing import Optional
+from datetime import datetime
 class UserBase(BaseModel):
     username: str
     full_name: Optional[str]=None
@@ -77,3 +78,21 @@ class TelAcceptReject(BaseModel):
     telid : int
     status : str
     order_id: int
+
+class GetCategoryAsPaginated(BaseModel): 
+    category :object
+    purchaser:str
+    product:str
+    seller:str
+    delivery_time:str
+    price: float
+    payer :str
+    urgent:bool
+    description: str
+    payment_type:str
+    image:Optional[object]=None
+    time_created: datetime
+    id : int
+    status:str
+    class Config:
+        orm_mode=True

@@ -80,16 +80,16 @@ def get_user_list(db:Session):
 
 def get_order_list(db:Session,role):
     if role in ['musa','shakhzod','begzod','fin','accountant']:
-        return db.query(models.Order).filter(models.Order.status==role).all()
+        return db.query(models.Order).filter(models.Order.status==role).order_by(models.Order.time_created.desc()).all()
     elif role in ['purchasing','superadmin']:
-        return db.query(models.Order).all()
+        return db.query(models.Order).order_by(models.Order.time_created.desc()).all()
     else: 
         return None
     
 
 def get_done_order_list(db:Session,role):
     if role in ['musa','shakhzod','begzod','fin','accountant','purchasing','superadmin']:
-        return db.query(models.Order).filter(or_(models.Order.status=='paid',models.Order.status=='denied')).all()
+        return db.query(models.Order).filter(or_(models.Order.status=='paid',models.Order.status=='denied')).order_by(models.Order.time_created.desc()).all()
     else: 
         return None
 
