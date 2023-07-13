@@ -136,7 +136,6 @@ async def create_order(form:schemas.Create_Order,db:Session=Depends(get_db),requ
         except:
             return {'message':'category id is not valid so change it','success':False}
         datetime_object = datetime.strptime(data.delivery_time, "%Y-%m-%dT%H:%M:%S.%fZ")
-        datetime_object = datetime_object.strftime("%Y-%m-%d %H:%M:%S.%f")
         year = datetime_object.strftime("%Y")
         month = datetime_object.strftime("%m")
         day = datetime_object.strftime("%d")
@@ -266,7 +265,6 @@ async def order_accept_reject(order_id:int,status:str,db:Session=Depends(get_db)
         return {'message':'you cannot perform this action','success':False}
     data = crud.order_accept_db(db,order_id=order_id,status=status,role=request_user.role)
     datetime_object = datetime.strptime(data.delivery_time, "%Y-%m-%dT%H:%M:%S.%fZ")
-    datetime_object = datetime_object.strftime("%Y-%m-%d %H:%M:%S.%f")
     year = datetime_object.strftime("%Y")
     month = datetime_object.strftime("%m")
     day = datetime_object.strftime("%d")
@@ -398,7 +396,6 @@ async def updatestatuswithtel(form_data:schemas.TelAcceptReject,db:Session=Depen
             detail="you cannot perform this action because you may not be owner of this order"
         )
     datetime_object = datetime.strptime(data.delivery_time, "%Y-%m-%dT%H:%M:%S.%fZ")
-    datetime_object = datetime_object.strftime("%Y-%m-%d %H:%M:%S.%f")
     year = datetime_object.strftime("%Y")
     month = datetime_object.strftime("%m")
     day = datetime_object.strftime("%d")
