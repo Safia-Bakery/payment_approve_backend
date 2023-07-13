@@ -135,7 +135,14 @@ async def create_order(form:schemas.Create_Order,db:Session=Depends(get_db),requ
 
         except:
             return {'message':'category id is not valid so change it','success':False}
-        message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {data.delivery_time}\n💰Стоимость: {data.price}\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}"
+        datetime_object = datetime.strftime(data.delivery_time,"%Y-%m-%d %H:%M:%S.%f")
+        year = datetime_object.strftime("%Y")
+        month = datetime_object.strftime("%m")
+        day = datetime_object.strftime("%d")
+        hours = datetime_object.strftime("%H")
+        minutes = datetime_object.strftime("%M")
+        dateandtime = f"{year}-{month}-{day}, {hours}:{minutes}"
+        message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price}\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}"
         user = crud.get_one_user_with_role(db,'musa')
 
 
