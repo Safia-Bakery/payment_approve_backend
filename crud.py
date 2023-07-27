@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 import models
 import schemas
-from sqlalchemy import or_
+from sqlalchemy import or_,and_
 import bcrypt
 
 def hash_password(password):
@@ -46,12 +46,15 @@ def create_order(db:Session,order:schemas.Create_Order):
                             payment_type=order.payment_type,
                             description=order.description,
                             urgent=order.urgent,
-                            image_id=order.image_id
+                            image_id=order.image_id,
+                            user_id=order.user_id
                             )
     db.add(db_order)
     db.commit()
     db.refresh(db_order)
     return db_order
+
+
 
 
 def create_image(db:Session,image_url):
@@ -78,11 +81,15 @@ def get_user_list(db:Session):
     return db.query(models.User).all()
 
 
-def get_order_list(db:Session,role):
-    if role in ['musa','shakhzod','begzod','fin','accountant']:
+def get_order_list(db:Session,role,user_id):
+    if role in ['musa','shakhzod','begzod','fin']:
         return db.query(models.Order).filter(models.Order.status==role).order_by(models.Order.time_created.desc()).all()
     elif role in ['purchasing','superadmin']:
         return db.query(models.Order).order_by(models.Order.time_created.desc()).all()
+    elif role == 'accountant':
+        return db.query(models.Order).filter(or_(models.Order.user_id==user_id,models.Order.status=='accountant')).all()
+    elif role == 'nakladnoy':
+        return db.query(models.Order).filter(and_(models.Order.user_id==user_id,models.Order.status=='paid')).all()
     else: 
         return None
     
@@ -113,8 +120,6 @@ def order_accept_db(db:Session,order_id,role,status):
             db_order_accept.status = 'fin'
         elif status =='accepted' and db_order_accept.status=='fin':
             db_order_accept.status = 'accountant'
-        elif status =='accepted' and db_order_accept.status=='accountant':
-            db_order_accept.status = 'paid'
         elif status =='denied':
             db_order_accept.status ='denied'
         else:
@@ -139,5 +144,24 @@ def get_one_user_with_role(db:Session,role):
 
 
 
+def add_paid_amaunt_order(db:Session,form_data:schemas.OrderAddPaid):
+    query = db.query(models.Order).filter(models.Order.id==form_data.order_id).first()
+    if form_data.paid_amount is not None:
+        if query.amount_paid:
+            overall = form_data.paid_amount+query.amount_paid
+            if overall>=query.price:
+                query.status='paid'
+            
+            query.amount_paid = overall
+        else:
+            query.amount_paid=form_data.paid_amount
+    if form_data.nakladnoy is not None:
+        query.nakladnoy = form_data.nakladnoy
+    db.commit()
+    db.refresh(query)
+    return query
 
 
+def get_user_nakladnoy(db:Session):
+    query = db.query(models.User).filter(or_(models.User.role=='accountant',models.User.role=='unconfirmed',models.User.role=='nakladnoy')).all()
+    return query

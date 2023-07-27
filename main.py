@@ -28,7 +28,7 @@ ALGORITHM = "HS256"
 JWT_SECRET_KEY = 'thisistokenforusersecretauth'   # should be kept secret
 JWT_REFRESH_SECRET_KEY =  'thisistokenforusersecretrefresh'
 
-BOT_TOKEN = '6298581686:AAGVha0x_j3u-KPik0NDW6eSd_LBZ-0yQRI'
+BOT_TOKEN = '6354204561:AAEBZAdnnJvijq8hZYU4wQAaDCVIXY3CpYM'
 
 origins = ["*"]
 
@@ -109,7 +109,7 @@ async def generate_token(form_data: schemas.TokenRequest, db: Session = Depends(
         raise HTTPException(status_code=400, detail="Invalid username or password")
     elif not verify_password(form_data.password, user.hashed_password): 
         raise HTTPException(status_code=400, detail="Invalid username or password")
-    if user.role not in ['musa','shakhzod','begzod','fin','accountant','purchasing','superadmin']:
+    if user.role not in ['musa','shakhzod','begzod','fin','accountant','purchasing','superadmin','nakladnoy']:
         raise HTTPException(status_code=400, detail="You are not super user")
 
     access_token = create_access_token(data={"sub": user.username})
@@ -132,21 +132,26 @@ async def create_order(form:schemas.Create_Order,db:Session=Depends(get_db),requ
     if request_user.role in ['purchasing','superadmin']:
         try:
             data = crud.create_order(db,order=form)
-
+            nakladnoy = crud.get_user_with_idcr(db=db,user_id=form.user_id)
+            if nakladnoy.role == 'unconfirmed':
+                crud.update_role(db=db,user_id=form.user_id,role = 'nakladnoy')
         except:
-            return {'message':'category id is not valid so change it','success':False}
-        datetime_object = datetime.strptime(data.delivery_time, "%Y-%m-%dT%H:%M:%S.%fZ")
-        year = datetime_object.strftime("%Y")
-        month = datetime_object.strftime("%m")
-        day = datetime_object.strftime("%d")
-        hours = datetime_object.strftime("%H")
-        minutes = datetime_object.strftime("%M")
-        dateandtime = f"{year}-{month}-{day}, {hours}:{minutes}"
-        message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price}\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}"
-        user = crud.get_one_user_with_role(db,'musa')
+            return {'message':'telegram id is not valid so change it','success':False}
+        try:
+            datetime_object = datetime.strptime(data.delivery_time, "%Y-%m-%dT%H:%M:%S.%fZ")
+            year = datetime_object.strftime("%Y")
+            month = datetime_object.strftime("%m")
+            day = datetime_object.strftime("%d")
+            hours = datetime_object.strftime("%H")
+            minutes = datetime_object.strftime("%M")
+            dateandtime = f"{year}-{month}-{day}, {hours}:{minutes}"
+            message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price}\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}"
+            user = crud.get_one_user_with_role(db,'musa')
 
 
-        response = microservices.sendtotelegram(bot_token=BOT_TOKEN,chat_id=user.telegram_id,message_text=message)
+            response = microservices.sendtotelegram(bot_token=BOT_TOKEN,chat_id=user.telegram_id,message_text=message)
+        except:
+            return {'success':True,'messaged':'order created but got some issues while sending it to telegram'}
     else:
         return {'message':'you are not superadmin or purchasing so you cannot create order','success':False}
     return data
@@ -193,9 +198,12 @@ async def get_user_list(db:Session=Depends(get_db),request_user: schemas.User = 
 @app.get('/get/order/list',response_model=Page[schemas.GetCategoryAsPaginated])
 async def get_order_list(db:Session=Depends(get_db),request_user: schemas.User = Depends(get_current_user)):
 
-    order = crud.get_order_list(db=db,role = request_user.role)
+    order = crud.get_order_list(db=db,role = request_user.role,user_id=request_user.id)
     if not order:
-        return {'message':'you cannot get this data because you arenot confirmed', 'success':False}
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="not found exceptnion "
+        )
     #print(schemas.Create_Order(data))\
     #order = [{'id':i.id,'status':i.status,'category':i.category.name , 'purchaser':i.purchaser, 'product':i.product,'seller':i.seller,'delivery_time':i.delivery_time,'price':i.price,'payer':i.payer,'urgent':i.urgent,'description':i.description,'payment_type':i.payment_type,'image_url':i.image_url} for i in order ]
     return paginate(order)
@@ -210,7 +218,6 @@ async def get_user_with_id(id_user:int,db:Session=Depends(get_db),request_user: 
     if not user:
         return {'message':'user with this id not exist'}
     return user
-
 
 
 
@@ -231,7 +238,9 @@ async def get_order_with_id(id_order:int,db:Session=Depends(get_db),request_user
             urgent=order.urgent,
             description=order.description,
             payment_type=order.payment_type,
-            image= order.image_url.image_url
+            image= order.image_url.image_url,
+            amount_paid=order.amount_paid,
+            nakladnoy=order.nakladnoy
         )
     else:
         order = schemas.GetCategoryWithId(
@@ -245,11 +254,13 @@ async def get_order_with_id(id_order:int,db:Session=Depends(get_db),request_user
             urgent=order.urgent,
             description=order.description,
             payment_type=order.payment_type,
-            image = order.image_url
-        )
-
-    
+            image = order.image_url,
+            amount_paid=order.amount_paid,
+            nakladnoy=order.nakladnoy
+        ) 
     return order
+
+
 
 admindict = {
     'musa':"Тухтаев Мусажон",
@@ -261,7 +272,7 @@ admindict = {
 
 @app.put('/order/accept/reject/{order_id}/{status}')
 async def order_accept_reject(order_id:int,status:str,db:Session=Depends(get_db),request_user: schemas.User = Depends(get_current_user)):
-    if request_user.role not in ['musa','shakhzod','begzod','fin','accountant']:
+    if request_user.role not in ['musa','shakhzod','begzod','fin']:
         return {'message':'you cannot perform this action','success':False}
     data = crud.order_accept_db(db,order_id=order_id,status=status,role=request_user.role)
     datetime_object = datetime.strptime(data.delivery_time, "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -275,9 +286,13 @@ async def order_accept_reject(order_id:int,status:str,db:Session=Depends(get_db)
         return {'message':'you cannot vote for this order. reason you may not be owner or accaptable status are accepted,denied','success':True}
     if data.status not in['denied','paid']:
         user = crud.get_one_user_with_role(db,data.status)
-        message= f"Заявка № {data.id}\n\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price}\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}"
-    
-        response = microservices.sendtotelegram(bot_token=BOT_TOKEN,chat_id=user.telegram_id,message_text=message)
+        if data.status=='accountant':
+            message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}"
+            microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=user.telegram_id,message_text=message)
+        else:
+            message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price} UZS\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}"
+
+            response = microservices.sendtotelegram(bot_token=BOT_TOKEN,chat_id=user.telegram_id,message_text=message)
     if data.status == 'paid' and data.category.name=='Розница':
         message= f"Заявка № {data.id}\n\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price}\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}\n📝 Комментарии: \n\nТухтаев Мусажон: Одобрено ✅\nСамигжанов Бекзод: Одобрено ✅\nФинансовый отдел: Подтвердждено ✅\nБухгалтерия: Подтвердждено ✅"
     
@@ -291,6 +306,28 @@ async def order_accept_reject(order_id:int,status:str,db:Session=Depends(get_db)
     
         response = microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=CHANNEL_id,message_text=message)
     return data
+
+
+
+@app.get('/users/overhead',response_model=list[schemas.User])
+async def get_users_for_nakladnoy(db:Session=Depends(get_db),request_user: schemas.User = Depends(get_current_user)):
+    users = crud.get_user_nakladnoy(db)
+    return users
+
+@app.put('/order/pay',response_model=schemas.GetCategoryAsPaginated)
+async def order_add_paid_amaount(form_data:schemas.OrderAddPaid,db:Session=Depends(get_db),request_user: schemas.User = Depends(get_current_user)):
+    if request_user.role in ['accountant','nakladnoy']:
+        data = crud.add_paid_amaunt_order(db,form_data=form_data)
+        if data.status=='paid':
+            message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}"
+            microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=data.user.telegram_id,message_text=message)
+        return data
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="not found exceptnion "
+        )
+
 
 
 
@@ -340,7 +377,7 @@ async def get_order_done_list(db:Session=Depends(get_db),request_user: schemas.U
 @app.post('/login/2', summary="Create access and refresh tokens for user")
 async def login(form_data: OAuth2PasswordRequestForm = Depends(),db:Session=Depends(get_db)):
     user = crud.get_user(db,form_data.username)
-    if user is None or user.role not in ['musa','shakhzod','begzod','fin','accountant','purchasing','superadmin']:
+    if user is None or user.role not in ['musa','shakhzod','begzod','fin','accountant','purchasing','superadmin','nakladnoy']:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect email or password"
@@ -384,7 +421,7 @@ async def get_me_telid(id:schemas.GetTelId,db:Session=Depends(get_db)):
 @app.post('/update/order/status/from/telegram')
 async def updatestatuswithtel(form_data:schemas.TelAcceptReject,db:Session=Depends(get_db)):
     user = crud.get_user_with_telid(db,form_data)
-    if user and user.role not in ['musa','shakhzod','begzod','fin','accountant']:
+    if user and user.role not in ['musa','shakhzod','begzod','fin']:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="you cannot perform this action because you may not be owner of this order"
@@ -404,9 +441,13 @@ async def updatestatuswithtel(form_data:schemas.TelAcceptReject,db:Session=Depen
     dateandtime = f"{year}-{month}-{day}, {hours}:{minutes}"
     if data.status not in['denied','paid']:
         user = crud.get_one_user_with_role(db,data.status)
-        message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price} UZS\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}"
-    
-        response = microservices.sendtotelegram(bot_token=BOT_TOKEN,chat_id=user.telegram_id,message_text=message)
+        if data.status=='accountant':
+            message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦"
+            microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=user.telegram_id,message_text=message)
+        else:
+            message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price} UZS\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}"
+
+            response = microservices.sendtotelegram(bot_token=BOT_TOKEN,chat_id=user.telegram_id,message_text=message)
     if data.status == 'paid' and data.category.name=='Розница':
         message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price} UZS\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}\n📝 Комментарии: \n\nТухтаев Мусажон: Одобрено ✅\nСамигжанов Бекзод: Одобрено ✅\nФинансовый отдел: Подтвердждено ✅\nБухгалтерия: Подтвердждено ✅"
     

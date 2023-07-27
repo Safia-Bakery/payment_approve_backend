@@ -39,6 +39,7 @@ class Create_Order(BaseModel):
     description: str
     payment_type:str
     image_id:Optional[int]=None
+    user_id:int
 
 
 
@@ -54,6 +55,9 @@ class User(BaseModel):
     username: str
     role: str
     success:Optional[str]=True
+    full_name:Optional[str]=None
+    class Config:
+        from_attributes=True
 
 
 class GetCategoryWithId(BaseModel): 
@@ -68,6 +72,8 @@ class GetCategoryWithId(BaseModel):
     description: str
     payment_type:str
     image:Optional[str]=None
+    amount_paid:Optional[float]=0
+    nakladnoy:Optional[str]=None
 
 
 class GetTelId(BaseModel):
@@ -80,7 +86,7 @@ class TelAcceptReject(BaseModel):
     order_id: int
 
 class GetCategoryAsPaginated(BaseModel): 
-    category :object
+    category :CategoryCreate
     purchaser:str
     product:str
     seller:str
@@ -92,7 +98,15 @@ class GetCategoryAsPaginated(BaseModel):
     payment_type:str
     image:Optional[object]=None
     time_created: datetime
+    amount_paid:Optional[float]=0
+    nakladnoy:Optional[str]=None
     id : int
     status:str
     class Config:
-        orm_mode=True
+        from_attributes=True
+
+
+class OrderAddPaid(BaseModel):
+    paid_amount:Optional[float]=None
+    nakladnoy:Optional[str]=None
+    order_id:int

@@ -6,3 +6,4 @@ python-jose
 pydantic[email]
 passlib[bcrypt]
 pytz
+requests

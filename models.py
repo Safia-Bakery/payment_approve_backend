@@ -16,6 +16,7 @@ class User(Base):
     time_created = Column(DateTime,default=datetime.now(timezonetash))
     full_name = Column(String,nullable=True)
     telegram_id = Column(BIGINT,unique=True)
+    order = relationship('Order',back_populates='user')
     
 
 
@@ -48,6 +49,11 @@ class Order(Base):
     image_id = Column(Integer,ForeignKey('images.id'),nullable=True)
     description = Column(String,nullable=True)
     payment_type = Column(String)
+    user_id = Column(Integer,ForeignKey('users.id'))
+    user = relationship('User',back_populates='order')
+    amount_paid = Column(Float,nullable=True)
+    nakladnoy = Column(String,nullable=True)
+    
     
 
 
