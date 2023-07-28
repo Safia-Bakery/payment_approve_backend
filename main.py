@@ -199,7 +199,7 @@ async def get_user_list(db:Session=Depends(get_db),request_user: schemas.User = 
 async def get_order_list(db:Session=Depends(get_db),request_user: schemas.User = Depends(get_current_user)):
 
     order = crud.get_order_list(db=db,role = request_user.role,user_id=request_user.id)
-    if not order:
+    if order is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="not found exceptnion "
