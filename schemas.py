@@ -104,7 +104,7 @@ class GetCategoryAsPaginated(BaseModel):
     urgent:bool
     description: str
     payment_type:str
-    image:Optional[object]=None
+    image_url:Optional[Image_url_schema]=None
     time_created: datetime
     amount_paid:Optional[float]=0
     nakladnoy:Optional[str]=None
