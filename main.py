@@ -353,7 +353,10 @@ async def get_order_done_list(db:Session=Depends(get_db),request_user: schemas.U
 
     order = crud.get_done_order_list(db=db,role = request_user.role)
     if not order:
-        return {'message':'you cannot get this data because you arenot confirmed', 'success':False}
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permission denied"
+        )
     #order = [{'id':i.id,'status':i.status,'category':i.category.name , 'purchaser':i.purchaser, 'product':i.product,'seller':i.seller,'delivery_time':i.delivery_time,'price':i.price,'payer':i.payer,'urgent':i.urgent,'description':i.description,'payment_type':i.payment_type,'image_url':i.image_url} for i in order ]
 
     return paginate(order)
