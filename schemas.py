@@ -59,7 +59,7 @@ class User(BaseModel):
     success:Optional[str]=True
     full_name:Optional[str]=None
     class Config:
-        from_attributes=True
+        orm_mode=True
 
 
 
