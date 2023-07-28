@@ -28,7 +28,7 @@ ALGORITHM = "HS256"
 JWT_SECRET_KEY = 'thisistokenforusersecretauth'   # should be kept secret
 JWT_REFRESH_SECRET_KEY =  'thisistokenforusersecretrefresh'
 
-BOT_TOKEN = '6354204561:AAEBZAdnnJvijq8hZYU4wQAaDCVIXY3CpYM'
+BOT_TOKEN = '6298581686:AAGVha0x_j3u-KPik0NDW6eSd_LBZ-0yQRI'
 
 origins = ["*"]
 
@@ -321,6 +321,14 @@ async def order_add_paid_amaount(form_data:schemas.OrderAddPaid,db:Session=Depen
         if data.status=='paid':
             message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}"
             microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=data.user.telegram_id,message_text=message)
+            if data.category.name=='Розница':
+                message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price} UZS\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}\n📝 Комментарии: \n\nТухтаев Мусажон: Одобрено ✅\nСамигжанов Бекзод: Одобрено ✅\nФинансовый отдел: Подтвердждено ✅\nБухгалтерия: Подтвердждено ✅"
+    
+                response = microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=CHANNEL_id,message_text=message)
+            if  data.category.name=='Фабрика':
+                message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price} UZS\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}\n📝 Комментарии: \n\nТухтаев Мусажон: Одобрено ✅\nШахзод: Одобрено ✅\nФинансовый отдел: Подтвердждено ✅\nБухгалтерия: Подтвердждено ✅"
+    
+                response = microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=CHANNEL_id,message_text=message)
         return data
     else:
         raise HTTPException(
@@ -448,14 +456,7 @@ async def updatestatuswithtel(form_data:schemas.TelAcceptReject,db:Session=Depen
             message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price} UZS\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}"
 
             response = microservices.sendtotelegram(bot_token=BOT_TOKEN,chat_id=user.telegram_id,message_text=message)
-    if data.status == 'paid' and data.category.name=='Розница':
-        message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price} UZS\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}\n📝 Комментарии: \n\nТухтаев Мусажон: Одобрено ✅\nСамигжанов Бекзод: Одобрено ✅\nФинансовый отдел: Подтвердждено ✅\nБухгалтерия: Подтвердждено ✅"
-    
-        response = microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=CHANNEL_id,message_text=message)
-    if data.status == 'paid' and data.category.name=='Фабрика':
-        message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price} UZS\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}\n📝 Комментарии: \n\nТухтаев Мусажон: Одобрено ✅\nШахзод: Одобрено ✅\nФинансовый отдел: Подтвердждено ✅\nБухгалтерия: Подтвердждено ✅"
-    
-        response = microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=CHANNEL_id,message_text=message)
+
     if data.status == 'denied':
         message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price} UZS\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}\n📝 Комментарии: \n\n{admindict[user.role]} ❌"
     
