@@ -24,6 +24,8 @@ class Token(BaseModel):
 
 class CategoryCreate(BaseModel):
     name :str
+    class Config:
+        orm_mode=True
 
 
 
@@ -102,9 +104,9 @@ class GetCategoryAsPaginated(BaseModel):
     urgent:bool
     description: str
     payment_type:str
-    image:Optional[Image_url_schema]=None
+    image:Optional[object]=None
     time_created: datetime
-    amount_paid:Optional[float]=None
+    amount_paid:Optional[float]=0
     nakladnoy:Optional[str]=None
     id : int
     status:str
