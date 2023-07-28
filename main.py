@@ -319,6 +319,13 @@ async def order_add_paid_amaount(form_data:schemas.OrderAddPaid,db:Session=Depen
     if request_user.role in ['accountant','nakladnoy']:
         data = crud.add_paid_amaunt_order(db,form_data=form_data)
         if data.status=='paid':
+            datetime_object = datetime.strptime(data.delivery_time, "%Y-%m-%dT%H:%M:%S.%fZ")
+            year = datetime_object.strftime("%Y")
+            month = datetime_object.strftime("%m")
+            day = datetime_object.strftime("%d")
+            hours = datetime_object.strftime("%H")
+            minutes = datetime_object.strftime("%M")
+            dateandtime = f"{year}-{month}-{day}, {hours}:{minutes}"
             message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}"
             microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=data.user.telegram_id,message_text=message)
             if data.category.name=='Розница':
