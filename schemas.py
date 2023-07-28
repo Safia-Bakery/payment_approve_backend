@@ -71,7 +71,7 @@ class GetCategoryWithId(BaseModel):
     urgent:Optional[bool]=False
     description: str
     payment_type:str
-    image:Optional[str]=None
+    image:Optional[int]=None
     amount_paid:Optional[float]=0
     nakladnoy:Optional[str]=None
 
