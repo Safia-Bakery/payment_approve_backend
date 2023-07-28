@@ -85,6 +85,10 @@ class TelAcceptReject(BaseModel):
     status : str
     order_id: int
 
+
+class Image_url_schema(BaseModel):
+    image_url:str
+
 class GetCategoryAsPaginated(BaseModel): 
     category :CategoryCreate
     purchaser:str
@@ -96,7 +100,7 @@ class GetCategoryAsPaginated(BaseModel):
     urgent:bool
     description: str
     payment_type:str
-    image:Optional[object]=None
+    image:Optional[Image_url_schema]=None
     time_created: datetime
     amount_paid:Optional[float]=0
     nakladnoy:Optional[str]=None
