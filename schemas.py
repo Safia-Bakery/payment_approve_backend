@@ -89,7 +89,7 @@ class TelAcceptReject(BaseModel):
 class Image_url_schema(BaseModel):
     image_url:str
     class Config:
-        from_attributes=True
+        orm_mode=True
 
 class GetCategoryAsPaginated(BaseModel): 
     category :CategoryCreate
@@ -109,7 +109,7 @@ class GetCategoryAsPaginated(BaseModel):
     id : int
     status:str
     class Config:
-        from_attributes=True
+        orm_mode=True
 
 
 class OrderAddPaid(BaseModel):
