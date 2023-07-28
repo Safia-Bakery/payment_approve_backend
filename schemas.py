@@ -104,7 +104,7 @@ class GetCategoryAsPaginated(BaseModel):
     payment_type:str
     image:Optional[Image_url_schema]=None
     time_created: datetime
-    amount_paid:Optional[float]=0
+    amount_paid:Optional[float]=None
     nakladnoy:Optional[str]=None
     id : int
     status:str
