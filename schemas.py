@@ -62,20 +62,7 @@ class User(BaseModel):
         from_attributes=True
 
 
-class GetCategoryWithId(BaseModel): 
-    category :str
-    purchaser:str
-    product:str
-    seller:str
-    delivery_time:str
-    price: float
-    payer :str
-    urgent:Optional[bool]=False
-    description: str
-    payment_type:str
-    image:Optional[int]=None
-    amount_paid:Optional[float]=0
-    nakladnoy:Optional[str]=None
+
 
 
 class GetTelId(BaseModel):
@@ -86,6 +73,8 @@ class TelAcceptReject(BaseModel):
     telid : int
     status : str
     order_id: int
+    class Config:
+        orm_mode=True
 
 
 class Image_url_schema(BaseModel):
@@ -118,3 +107,21 @@ class OrderAddPaid(BaseModel):
     paid_amount:Optional[float]=None
     nakladnoy:Optional[str]=None
     order_id:int
+    class Config:
+        orm_mode=True
+class GetCategoryWithId(BaseModel): 
+    category :str
+    purchaser:str
+    product:str
+    seller:str
+    delivery_time:str
+    price: float
+    payer :str
+    urgent:Optional[bool]=False
+    description: str
+    payment_type:str
+    image_url:Optional[Image_url_schema]=None
+    amount_paid:Optional[float]=0
+    nakladnoy:Optional[str]=None
+    class Config:
+        orm_mode=True

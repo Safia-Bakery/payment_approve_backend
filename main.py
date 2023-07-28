@@ -204,7 +204,6 @@ async def get_order_list(db:Session=Depends(get_db),request_user: schemas.User =
             status_code=status.HTTP_404_NOT_FOUND,
             detail="not found exceptnion "
         )
-    print(order)
     #print(schemas.Create_Order(data))\
     #order = [{'id':i.id,'status':i.status,'category':i.category.name , 'purchaser':i.purchaser, 'product':i.product,'seller':i.seller,'delivery_time':i.delivery_time,'price':i.price,'payer':i.payer,'urgent':i.urgent,'description':i.description,'payment_type':i.payment_type,'image_url':i.image_url} for i in order ]
     return paginate(order)
