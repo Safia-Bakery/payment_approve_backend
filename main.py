@@ -240,7 +240,8 @@ async def get_order_with_id(id_order:int,db:Session=Depends(get_db),request_user
             payment_type=order.payment_type,
             image= order.image_url.image_url,
             amount_paid=order.amount_paid,
-            nakladnoy=order.nakladnoy
+            nakladnoy=order.nakladnoy,
+            status=order.status
         )
     else:
         order = schemas.GetCategoryWithId(
@@ -256,7 +257,8 @@ async def get_order_with_id(id_order:int,db:Session=Depends(get_db),request_user
             payment_type=order.payment_type,
             image = order.image_url,
             amount_paid=order.amount_paid,
-            nakladnoy=order.nakladnoy
+            nakladnoy=order.nakladnoy,
+            status=order.status
         ) 
     return order
 
@@ -287,20 +289,18 @@ async def order_accept_reject(order_id:int,status:str,db:Session=Depends(get_db)
     if data.status not in['denied','paid']:
         user = crud.get_one_user_with_role(db,data.status)
         if data.status=='accountant':
-            message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}"
-            microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=user.telegram_id,message_text=message)
+            if data.category.name=='Розница':
+                message= f"Заявка #{data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price} UZS\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}\n📝 Комментарии: \n\nТухтаев Мусажон: Одобрено ✅\nСамигжанов Бекзод: Одобрено ✅\nФинансовый отдел: Подтвердждено✅"
+                microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=user.telegram_id,message_text=message)
+                response = microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=CHANNEL_id,message_text=message)
+            if  data.category.name=='Фабрика':
+                message= f"Заявка #{data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price} UZS\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}\n📝 Комментарии: \n\nТухтаев Мусажон: Одобрено ✅\nШахзод: Одобрено ✅\nФинансовый отдел: Подтвердждено ✅"
+                microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=user.telegram_id,message_text=message)
+                response = microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=CHANNEL_id,message_text=message)
         else:
             message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price} UZS\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}"
 
             response = microservices.sendtotelegram(bot_token=BOT_TOKEN,chat_id=user.telegram_id,message_text=message)
-    if data.status == 'paid' and data.category.name=='Розница':
-        message= f"Заявка № {data.id}\n\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price}\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}\n📝 Комментарии: \n\nТухтаев Мусажон: Одобрено ✅\nСамигжанов Бекзод: Одобрено ✅\nФинансовый отдел: Подтвердждено ✅\nБухгалтерия: Подтвердждено ✅"
-    
-        response = microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=CHANNEL_id,message_text=message)
-    if data.status == 'paid' and data.category.name=='Фабрика':
-        message= f"Заявка № {data.id}\n\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price}\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}\n📝 Комментарии: \n\nТухтаев Мусажон: Одобрено ✅\nШахзод: Одобрено ✅\nФинансовый отдел: Подтвердждено ✅\nБухгалтерия: Подтвердждено ✅"
-    
-        response = microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=CHANNEL_id,message_text=message)
     if data.status == 'denied':
         message= f"Заявка № {data.id}\n\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price}\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}\n📝 Комментарии: \n\n{admindict[request_user.role]} ❌"
     
@@ -319,23 +319,9 @@ async def order_add_paid_amaount(form_data:schemas.OrderAddPaid,db:Session=Depen
     if request_user.role in ['accountant','nakladnoy']:
         data = crud.add_paid_amaunt_order(db,form_data=form_data)
         if data.status=='paid':
-            datetime_object = datetime.strptime(data.delivery_time, "%Y-%m-%dT%H:%M:%S.%fZ")
-            year = datetime_object.strftime("%Y")
-            month = datetime_object.strftime("%m")
-            day = datetime_object.strftime("%d")
-            hours = datetime_object.strftime("%H")
-            minutes = datetime_object.strftime("%M")
-            dateandtime = f"{year}-{month}-{day}, {hours}:{minutes}"
-            message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}"
-            microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=data.user.telegram_id,message_text=message)
-            if data.category.name=='Розница':
-                message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price} UZS\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}\n📝 Комментарии: \n\nТухтаев Мусажон: Одобрено ✅\nСамигжанов Бекзод: Одобрено ✅\nФинансовый отдел: Подтвердждено ✅\nБухгалтерия: Подтвердждено ✅"
-    
-                response = microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=CHANNEL_id,message_text=message)
-            if  data.category.name=='Фабрика':
-                message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price} UZS\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}\n📝 Комментарии: \n\nТухтаев Мусажон: Одобрено ✅\nШахзод: Одобрено ✅\nФинансовый отдел: Подтвердждено ✅\nБухгалтерия: Подтвердждено ✅"
-    
-                response = microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=CHANNEL_id,message_text=message)
+            message= f"Заявка #{data.id}\nОплачен ✅"
+            microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=CHANNEL_id,message_text=message)
+        
         return data
     else:
         raise HTTPException(
@@ -460,8 +446,15 @@ async def updatestatuswithtel(form_data:schemas.TelAcceptReject,db:Session=Depen
     if data.status not in['denied','paid']:
         user = crud.get_one_user_with_role(db,data.status)
         if data.status=='accountant':
-            message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦"
-            microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=user.telegram_id,message_text=message)
+            if data.category.name=='Розница':
+                message= f"Заявка #{data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price} UZS\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}\n📝 Комментарии: \n\nТухтаев Мусажон: Одобрено ✅\nСамигжанов Бекзод: Одобрено ✅\nФинансовый отдел: Подтвердждено✅"
+                microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=user.telegram_id,message_text=message)
+                response = microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=CHANNEL_id,message_text=message)
+            if  data.category.name=='Фабрика':
+                message= f"Заявка #{data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price} UZS\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}\n📝 Комментарии: \n\nТухтаев Мусажон: Одобрено ✅\nШахзод: Одобрено ✅\nФинансовый отдел: Подтвердждено ✅"
+                microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=user.telegram_id,message_text=message)
+    
+                response = microservices.sendtotelegramchannel(bot_token=BOT_TOKEN,chat_id=CHANNEL_id,message_text=message)
         else:
             message= f"Заявка № {data.id}\n🔘Тип: {data.category.name}\n🙍‍♂Заказчик: {data.purchaser}\n📦Товар: {data.product}\n👨‍💼Поставщик: {data.seller}\n🕘Срок: {dateandtime}\n💰Стоимость: {data.price} UZS\n💲Тип оплаты: {data.payment_type}\n💳Плательщик: {data.payer}\nℹ️Описание: {data.description}"
 

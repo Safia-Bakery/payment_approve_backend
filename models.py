@@ -67,6 +67,7 @@ class ImageUpload(Base):
     id = Column(Integer,primary_key=True,index=True)
     image_url = Column(String)
     order_image = relationship('Order',back_populates='image_url')
+    
 
 
 
