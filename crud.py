@@ -155,6 +155,8 @@ def add_paid_amaunt_order(db:Session,form_data:schemas.OrderAddPaid):
             query.amount_paid = overall
         else:
             query.amount_paid=form_data.paid_amount
+            if form_data.paid_amount>=query.price:
+                query.status='paid'
     if form_data.nakladnoy is not None:
         query.nakladnoy = form_data.nakladnoy
     db.commit()
@@ -163,5 +165,5 @@ def add_paid_amaunt_order(db:Session,form_data:schemas.OrderAddPaid):
 
 
 def get_user_nakladnoy(db:Session):
-    query = db.query(models.User).filter(or_(models.User.role=='accountant',models.User.role=='unconfirmed',models.User.role=='nakladnoy')).all()
+    query = db.query(models.User).filter(models.User.role.in_(['accountant','unconfirmed','nakladnoy'])).all()
     return query
