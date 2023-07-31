@@ -123,5 +123,6 @@ class GetCategoryWithId(BaseModel):
     image_url:Optional[Image_url_schema]=None
     amount_paid:Optional[float]=0
     nakladnoy:Optional[str]=None
+    status:str
     class Config:
         orm_mode=True
